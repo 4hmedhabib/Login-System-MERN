@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const cors = require('cors');
 
 const bcrypt = require('bcrypt');
@@ -7,18 +7,18 @@ const saltRounds = 10;
 
 const app = express();
 
-app.use(express.json());
 app.use(
 	cors({
-		origin: [ 'http://localhost:3000' ],
+		origin: 'http://localhost:3000',
 		methods: [ 'GET', 'POST' ],
 		credentials: true
 	})
 );
+app.use(express.json());
 
-const db = mysql.createConnection({
-	user: 'root',
+const db = mysql.createPool({
 	host: 'localhost',
+	user: 'root',
 	password: '',
 	database: 'login_system'
 });
@@ -26,6 +26,7 @@ const db = mysql.createConnection({
 app.post('/register', (req, res) => {
 	const username = req.body.username;
 	const password = req.body.password;
+	console.log('Your data is ', username, password);
 
 	bcrypt.hash(password, saltRounds, (err, hash) => {
 		if (err) {
@@ -33,7 +34,11 @@ app.post('/register', (req, res) => {
 		}
 
 		db.query('INSERT INTO users (username, password) VALUES (?,?)', [ username, hash ], (err, result) => {
-			console.log(err);
+			if (err) {
+				console.log(err);
+				return;
+			}
+			console.log(result);
 		});
 	});
 });
@@ -64,5 +69,5 @@ app.post('/login', (req, res) => {
 });
 
 app.listen(3001, () => {
-	console.log('running server port: 3001');
+	console.log('SERVER RUNNING PORT : 3001');
 });
